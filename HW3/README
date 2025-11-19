@@ -1,0 +1,52 @@
+# MSDS 683 – Assignment 3 (Airflow)
+
+**Group name:** Dragon  
+**Members:** Daniel Mendoza, Shruti Kulkarni
+
+## Tool Selected
+Apache Airflow
+
+## Problem Statement Implemented
+We implemented a small DataOps pipeline that:
+1. Ingests the latest 1-minute bar for AAPL from the Alpaca API.
+2. Transforms the raw bar into a cleaned JSON record with selected fields.
+3. Publishes the result by appending it to a CSV file.
+
+This is a dummy version of an ingest → transform → publish pipeline motivated by our class project.
+
+## How This Fits Into DataOps
+
+- **Orchestration:** Airflow manages the full pipeline as a DAG with three tasks
+  (`fetch_stock_data` → `transform_stock_data` → `publish_stock_data`).
+- **Dependencies:** We explicitly set upstream/downstream dependencies so tasks
+  run in the correct order.
+- **Retries & Reliability:** Each task uses `default_args` with `retries=2`
+  and a `retry_delay` of 5 minutes.
+- **Scheduling:** The DAG is configured with `schedule='@once'` and `catchup=False`
+  so we can trigger a controlled run for the demo.
+- **Reproducibility:** The ingest step writes to `/tmp/raw_stock_data.json`,
+  the transform step writes `/tmp/transformed_stock_data.json`, and the publish
+  step appends to `stock_data_AAPL.csv`, making each stage inspectable.
+
+## Reflection 
+
+For this assignment we built a small Airflow pipeline that fetches one bar of AAPL data from the Alpaca API, transforms it, and saves it into a CSV. At first we kept getting an error because we were trying to read the timestamp from a dict instead of the DataFrame index, but once we reset the index and cleaned up the code the DAG ran without any issues. Running the DAG in Airflow also helped me understand how dependencies actually work because we could see each task running in the right order, and how retries are handled. After fixing the bug, the DAG went through all three steps successfully and the CSV file was created with the expected values. Overall it was pretty cool to see how the whole thing flows inside Airflow and how easy it is to debug once you get the hang of the UI.
+
+## Files in This Submission
+
+- `dags/stock_data_dag.py` – Airflow DAG with ingest, transform, and publish tasks.
+- `screenshots/Airflow-DAG.png` – Task Instances view showing all tasks succeeded.
+- `screenshots/Graph-DAG.png` – Graph view showing the DAG structure and successful run.
+
+
+## How to Verify
+
+1. Open the Airflow UI and enable the `stock_data_pipeline` DAG.
+2. Trigger a manual run.
+3. Confirm in the UI that all three tasks show **Success**.
+4. Check that the CSV is created/updated at `/tmp/stock_data_AAPL.csv`.
+
+
+We ran Airflow locally using `airflow standalone`. After the UI starts, we logged in,
+searched for the `stock_data_pipeline` DAG, unpaused it, and triggered it manually.
+Used "msds682" conda env. Added DAG file into ~/Airflow/DAG folder.
