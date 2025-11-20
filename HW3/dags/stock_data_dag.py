@@ -38,7 +38,7 @@ def fetch_stock_data():
         )
         
         symbol = 'AAPL' 
-        bars = alpaca_api.get_bars(symbol, '1Min', limit=1).df
+        bars = alpaca_api.get_bars(symbol, '1Min', limit=20).df
 
         if bars.empty:
             raise ValueError("No data returned from Alpaca")
@@ -76,7 +76,6 @@ def transform_stock_data():
         with open('/tmp/raw_stock_data.json', 'r') as f:
             data = json.load(f)
         
-        # Simple transformations
         transformed = {
             'symbol': data.get('symbol'),
             'timestamp': data.get('timestamp'),
